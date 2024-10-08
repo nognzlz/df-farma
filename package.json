@@ -4,7 +4,8 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "start": "node apps/api/dist/main"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
