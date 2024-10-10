@@ -5,7 +5,7 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "start": "concurrently --kill-others \"node apps/bot-socket/dist/index\" \"node apps/api/dist/main\""
+    "start": "node apps/api/dist/main"
   },
   "devDependencies": {
     "concurrently": "^9.0.1",

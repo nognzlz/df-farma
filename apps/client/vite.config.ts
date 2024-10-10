@@ -11,7 +11,7 @@ export default defineConfig({
         changeOrigin: true,
       },
       "/socket.io": {
-        target: "http://localhost:4001", // Local socket.io app
+        target: "http://localhost:3000", // Local socket.io app
         changeOrigin: true,
         ws: true,
       },
