@@ -10,6 +10,11 @@ export default defineConfig({
         target: "http://localhost:3000", // Local nest app
         changeOrigin: true,
       },
+      "/socket.io": {
+        target: "http://localhost:4001", // Local socket.io app
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
 });
