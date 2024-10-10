@@ -1,9 +1,16 @@
-import { useEffect, useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { Button, Divider, Flex, Typography } from "antd";
 import "./App.css";
+import { useEffect, useState } from "react";
+import { QRCode } from "antd";
+import io from "socket.io-client";
 
 function App() {
+  const { Title, Paragraph } = Typography;
+  const [showQR, setShowQR] = useState(false);
+  const [loadingQR, setLoadingQR] = useState(false);
+  const [qrCode, setQrCode] = useState("");
+  const [deviceConnected, setDeviceConnected] = useState("");
+
   const [greeting, setGreeting] = useState("");
 
   useEffect(() => {
@@ -12,19 +19,48 @@ function App() {
       .then(setGreeting);
   }, []);
 
+  function handleLink() {
+    setLoadingQR(true);
+    const socket = io("/");
+    socket.on("connect", () => {
+      socket.emit("init-client");
+    });
+
+    socket.on("newqr", (qr: string) => {
+      setQrCode(qr);
+      setLoadingQR(false);
+      setShowQR(true);
+    });
+
+    socket.on("deviceConnected", () => {
+      setDeviceConnected("connected");
+      setShowQR(false);
+    });
+  }
+
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div>{greeting}</div>
-    </>
+    <Flex justify="flex-start" align="flex-start" vertical>
+      <Title>Farmabot {greeting}</Title>
+      <Divider />
+      {!deviceConnected && (
+        <Button type="primary" onClick={handleLink}>
+          Vincular dispositivo
+        </Button>
+      )}
+      {loadingQR && (
+        <Paragraph style={{ marginTop: "10px" }}>
+          Cargando codigo QR...
+        </Paragraph>
+      )}
+      {showQR && (
+        <QRCode value={qrCode} size={400} style={{ marginTop: "10px" }} />
+      )}
+      {deviceConnected === "connected" && (
+        <Paragraph style={{ marginTop: "10px" }} type="success">
+          Dispositivo vinculado ✅
+        </Paragraph>
+      )}
+    </Flex>
   );
 }
 
