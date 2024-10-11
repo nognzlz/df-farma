@@ -1,8 +1,9 @@
-import { Button, Divider, Flex, Typography } from "antd";
-import "./App.css";
-import { useEffect, useRef, useState } from "react";
+import { Button, Flex, Typography } from "antd";
+import { useRef, useState } from "react";
 import { QRCode } from "antd";
+import "./App.css";
 import io, { Socket } from "socket.io-client";
+import { Header } from "./components/Header";
 
 function App() {
   const { Title, Paragraph } = Typography;
@@ -35,55 +36,82 @@ function App() {
 
     socketRef.current.on("deviceConnected", (deviceInfo) => {
       setDeviceConnected(deviceInfo);
-      console.log("🚀 ~ socketRef.current.on ~ deviceInfo:", deviceInfo);
       setShowQR(false);
+    });
+
+    socketRef.current.on("deviceDisconnected", () => {
+      setDeviceConnected(undefined);
+      setShowQR(false);
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
     });
   }
 
+  function handleUnlink() {
+    socketRef.current!.emit("stop-client");
+  }
+
   return (
-    <Flex justify="flex-start" align="flex-start" vertical>
-      <Title>Farmabot</Title>
-      <Divider />
-      {!deviceConnected && !loadingQR && (
-        <Button type="primary" onClick={handleLink}>
-          Vincular dispositivo
-        </Button>
-      )}
-      {loadingQR && (
-        <Paragraph style={{ marginTop: "10px" }}>
-          Cargando codigo QR...
-        </Paragraph>
-      )}
-      {showQR && !deviceConnected && (
-        <>
-          <Paragraph style={{ marginTop: "10px" }}>
-            📱 Escanea el código QR con tu dispositivo
-          </Paragraph>
-          <QRCode
-            value={qrCode}
-            size={400}
-            type="svg"
-            style={{ marginTop: "10px" }}
-          />
-        </>
-      )}
-      {deviceConnected && (
-        <>
-          <Paragraph style={{ marginTop: "10px" }}>
-            ✅ Dispositivo vinculado:
-            <ul style={{ textAlign: "left" }}>
-              <li>
-                {deviceConnected.platform} de {deviceConnected.name}
-              </li>
-              <li>linea {deviceConnected.phone.slice(3)}</li>
-            </ul>
-          </Paragraph>
-          <Button color="danger" variant="solid">
-            Desvincular dispositivo
+    <>
+      <Header
+        logo={
+          <Flex justify="center" align="center">
+            <img
+              style={{ height: "36px", marginRight: "8px" }}
+              src="whatsapp.png"
+            />
+            <Title style={{ margin: "10px" }}>Farmabot</Title>
+          </Flex>
+        }
+      />
+      <Flex
+        style={{ maxWidth: "1024px", padding: "0 24px" }}
+        justify="flex-start"
+        align="flex-start"
+        vertical
+      >
+        {!deviceConnected && !loadingQR && !showQR && (
+          <Button type="primary" onClick={handleLink}>
+            Vincular dispositivo
           </Button>
-        </>
-      )}
-    </Flex>
+        )}
+        {loadingQR && (
+          <Paragraph style={{ marginTop: "10px" }}>
+            Cargando codigo QR...
+          </Paragraph>
+        )}
+        {showQR && !deviceConnected && (
+          <>
+            <Title level={3} style={{ marginTop: "10px" }}>
+              📱 Escanea el código QR con tu dispositivo
+            </Title>
+            <QRCode
+              value={qrCode}
+              size={400}
+              type="svg"
+              style={{ marginTop: "10px" }}
+            />
+          </>
+        )}
+        {deviceConnected && (
+          <>
+            <Paragraph style={{ marginTop: "10px" }}>
+              ✅ Dispositivo vinculado:
+              <ul style={{ textAlign: "left" }}>
+                <li>
+                  {deviceConnected.platform} de {deviceConnected.name}
+                </li>
+                <li>linea {deviceConnected.phone.slice(3)}</li>
+              </ul>
+            </Paragraph>
+            <Button color="danger" variant="solid" onClick={handleUnlink}>
+              Desvincular dispositivo
+            </Button>
+          </>
+        )}
+      </Flex>
+    </>
   );
 }
 

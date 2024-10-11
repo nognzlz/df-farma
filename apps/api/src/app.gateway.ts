@@ -33,10 +33,17 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
     this.wapclient.start();
   }
+
+  @SubscribeMessage('stop-client')
+  handleStopClient(client: Socket) {
+    console.log('stopping client...');
+    this.wapclient.stop();
+    client.emit('deviceDisconnected');
+  }
 }
 
 class WapClient {
-  client: Client;
+  private client: Client;
 
   constructor() {
     this.client = new Client({});
@@ -44,6 +51,10 @@ class WapClient {
 
   start() {
     this.client.initialize();
+  }
+
+  stop() {
+    this.client.destroy();
   }
 
   onQRCode(callback) {
