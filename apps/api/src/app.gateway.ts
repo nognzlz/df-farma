@@ -28,7 +28,9 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleInitClient(client: Socket) {
     console.log('initializing client...');
     this.wapclient.onQRCode((qr) => client.emit('newqr', qr));
-    this.wapclient.onDeviceConnected(() => client.emit('deviceConnected'));
+    this.wapclient.onDeviceConnected((deviceInfo) => {
+      client.emit('deviceConnected', deviceInfo);
+    });
     this.wapclient.start();
   }
 }
@@ -53,7 +55,12 @@ class WapClient {
 
   onDeviceConnected(callback) {
     this.client.once('ready', () => {
-      callback();
+      const clientInfo = this.client.info;
+      callback({
+        phone: clientInfo.wid.user,
+        name: clientInfo.pushname,
+        platform: clientInfo.platform,
+      });
     });
   }
 }
