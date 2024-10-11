@@ -1,5 +1,5 @@
-import { Button, Flex, Typography } from "antd";
-import { useRef, useState } from "react";
+import { Button, Flex, Space, Spin, Typography } from "antd";
+import { useEffect, useRef, useState } from "react";
 import { QRCode } from "antd";
 import "./App.css";
 import io, { Socket } from "socket.io-client";
@@ -7,6 +7,7 @@ import { Header } from "./components/Header";
 
 function App() {
   const { Title, Paragraph } = Typography;
+  const [loading, setLoading] = useState(true);
   const [showQR, setShowQR] = useState(false);
   const [loadingQR, setLoadingQR] = useState(false);
   const [qrCode, setQrCode] = useState("");
@@ -17,12 +18,11 @@ function App() {
   }>();
   const socketRef = useRef<Socket>();
 
-  function handleLink() {
+  useEffect(() => {
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
     socketRef.current = io("/");
-    setLoadingQR(true);
 
     socketRef.current.on("connect", () => {
       socketRef.current!.emit("init-client");
@@ -37,6 +37,7 @@ function App() {
     socketRef.current.on("deviceConnected", (deviceInfo) => {
       setDeviceConnected(deviceInfo);
       setShowQR(false);
+      setLoading(false);
     });
 
     socketRef.current.on("deviceDisconnected", () => {
@@ -46,6 +47,33 @@ function App() {
         socketRef.current.disconnect();
       }
     });
+  }, []);
+
+  function handleLink() {
+    // if (socketRef.current) {
+    //   socketRef.current.disconnect();
+    // }
+    // socketRef.current = io("/");
+    // setLoadingQR(true);
+    // socketRef.current.on("connect", () => {
+    //   socketRef.current!.emit("init-client");
+    // });
+    // socketRef.current.on("newqr", (qr: string) => {
+    //   setQrCode(qr);
+    //   setLoadingQR(false);
+    //   setShowQR(true);
+    // });
+    // socketRef.current.on("deviceConnected", (deviceInfo) => {
+    //   setDeviceConnected(deviceInfo);
+    //   setShowQR(false);
+    // });
+    // socketRef.current.on("deviceDisconnected", () => {
+    //   setDeviceConnected(undefined);
+    //   setShowQR(false);
+    //   if (socketRef.current) {
+    //     socketRef.current.disconnect();
+    //   }
+    // });
   }
 
   function handleUnlink() {
@@ -71,7 +99,17 @@ function App() {
         align="flex-start"
         vertical
       >
-        {!deviceConnected && !loadingQR && !showQR && (
+        {loading && (
+          <Flex justify="center" align="center">
+            <Space size="middle">
+              <Spin size="large" />
+              <Title level={4} style={{ marginTop: "10px" }}>
+                Cargando...
+              </Title>
+            </Space>
+          </Flex>
+        )}
+        {!deviceConnected && !loadingQR && !showQR && !loading && (
           <Button type="primary" onClick={handleLink}>
             Vincular dispositivo
           </Button>

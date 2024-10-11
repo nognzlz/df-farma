@@ -5,7 +5,7 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Client } from 'whatsapp-web.js';
+import { Client, LocalAuth } from 'whatsapp-web.js';
 
 @WebSocketGateway()
 export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -25,13 +25,13 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('init-client')
-  handleInitClient(client: Socket) {
+  async handleInitClient(client: Socket) {
     console.log('initializing client...');
     this.wapclient.onQRCode((qr) => client.emit('newqr', qr));
     this.wapclient.onDeviceConnected((deviceInfo) => {
       client.emit('deviceConnected', deviceInfo);
     });
-    this.wapclient.start();
+    await this.wapclient.start();
   }
 
   @SubscribeMessage('stop-client')
@@ -46,11 +46,19 @@ class WapClient {
   private client: Client;
 
   constructor() {
-    this.client = new Client({});
+    this.client = new Client({
+      authStrategy: new LocalAuth({
+        dataPath: 'farmafolder',
+      }),
+    });
   }
 
-  start() {
-    this.client.initialize();
+  getClient() {
+    return this.client;
+  }
+
+  async start() {
+    await this.client.initialize();
   }
 
   stop() {
@@ -67,6 +75,8 @@ class WapClient {
   onDeviceConnected(callback) {
     this.client.once('ready', () => {
       const clientInfo = this.client.info;
+      console.log('device ready...');
+
       callback({
         phone: clientInfo.wid.user,
         name: clientInfo.pushname,
